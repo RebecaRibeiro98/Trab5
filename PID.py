@@ -83,6 +83,7 @@ def timerCallBack(event):
         if scan_len > 0:
         
             if min(scan.ranges[scan_len-5 : scan_len+5]) < 100:
+                print ("SOCOROO")
                 
                 msg.angular.z = 0
                 point = min (scan.ranges[scan_len-10 : scan_len+10]) 
@@ -102,6 +103,7 @@ def timerCallBack(event):
                 erro2 = error2 
             
             else:
+                print ("AAAAAAAAAAAAAA")
                 if min(scan.ranges[scan_len-15 : scan_len+15]) < 100:
                     msg.angular.z = 0.3*0.5
                 else:
@@ -113,7 +115,8 @@ def timerCallBack(event):
         
         else:
             control2 = 0
-        
+            print ("zero")
+        print ("fiz nd")
         msg.angular.z = control2
         
         state = 'state2'
