@@ -80,6 +80,7 @@ def timerCallBack(event):
     scan_len = len(scan.ranges)
 	
     print (scan_len)
+    print (yaw)
 	
     if not(scan_len > 0):
         control2 = 0
@@ -94,9 +95,9 @@ def timerCallBack(event):
         if min(scan.ranges[scan_len-5 : scan_len+5]) < 100:
             print ("AAA")
             msg.angular.z = 0
-            point = min (scan.ranges[scan_len-10 : scan_len+10]) 
+            setpoint2 = min (scan.ranges[scan_len-10 : scan_len+10]) 
 			#interpolando
-            setpoint2 = (200*((point - scan.ranges[0])/(scan.ranges[scan_len-1] - scan.ranges[0]))) - 100
+            #setpoint2 = (200*((point - scan.ranges[0])/(scan.ranges[scan_len-1] - scan.ranges[0]))) - 100
             error2 = (setpoint2 - yaw)
     
             if abs(error2) > 180:
