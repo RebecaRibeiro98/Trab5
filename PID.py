@@ -100,7 +100,7 @@ def timerCallBack(event):
                 control2 = P2+I2+D2
                 erro2 = error2 
             
-            else
+            else:
                 if min(scan.ranges[scan_len-15 : scan_len+15]) < 100:
                     msg.angular.z = 0.3*0.5
                 else:
