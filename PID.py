@@ -108,7 +108,7 @@ def timerCallBack(event):
                     msg.angular.z = 0.3*0.5
                     
                 else:
-                    msg.angular.z =0.3
+                    msg.angular.z = 3
                     print ("virei nada")
             
             
