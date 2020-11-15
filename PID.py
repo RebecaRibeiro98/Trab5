@@ -92,6 +92,7 @@ def timerCallBack(event):
         print('Buscando...')
        
         if min(scan.ranges[scan_len-5 : scan_len+5]) < 100:
+            print ("AAA")
             msg.angular.z = 0
             point = min (scan.ranges[scan_len-10 : scan_len+10]) 
 			#interpolando
@@ -111,6 +112,7 @@ def timerCallBack(event):
 				
         else:	
             if min(scan.ranges[scan_len-15 : scan_len+15]) < 100:
+                print ("gira inferno")
                 msg.angular.z = 0.3*0.5
             else:
                 msg.angular.z = 0.3
