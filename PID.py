@@ -106,8 +106,10 @@ def timerCallBack(event):
                 print ("AAAAAAAAAAAAAA")
                 if min(scan.ranges[scan_len-15 : scan_len+15]) < 100:
                     msg.angular.z = 0.3*0.5
+                    
                 else:
                     msg.angular.z =0.3
+                    print ("virei nada")
             
             
                 
