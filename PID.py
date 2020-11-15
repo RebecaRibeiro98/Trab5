@@ -79,6 +79,7 @@ def timerCallBack(event):
     if state == 'state1':
         yaw = getAngle(odom)
         scan_len = len(scan.ranges)
+        print (scan_len)
         if scan_len > 0:
         
             if min(scan.ranges[scan_len-5 : scan_len+5]) < 100:
