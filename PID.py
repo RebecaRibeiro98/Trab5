@@ -5,19 +5,18 @@ from sensor_msgs.msg import LaserScan
 import tf
 import math
 
-matriculas = [2017003772, 2016000168, 2017001160, 2016018028]
-freqMat = 0.0
-timeMat = 0.0
-estado = "busca"
-velAng=0.3
 
+#kp1 = 1
+kp2 = 0.01
+kp3 = 1
 
-kp = 0.5
-ki = 0.015
-kd = 0.02
+#ki1 = 1
+ki2 = 0.0001
+ki3 = 0.01
 
-lastError = 0
-sumError = 0
+#kd1 = 1
+kd2 = 0.01
+kd3 = 1
 
 odom = Odometry()
 scan = LaserScan()
@@ -31,24 +30,8 @@ def getAngle(msg):
     euler = tf.transformations.euler_from_quaternion(quat)
     yaw = euler[2]*180.0/math.pi
     return yaw
-    
-def mediaSomaMatriculas(arrayMat):
-    avg = 0
-    for matricula in arrayMat:
-        sumMat=0
-        for i in str(matricula):
-            sumMat += int(i)
-            
-        avg+=sumMat
-        
-    avg = float(avg)/len(arrayMat)
-    return avg
 
-freqMat = mediaSomaMatriculas(matriculas)
-timeMat = 1.0/freqMat
-print('Frequencia: '+str(freqMat)+' Hz')
-
-# CALLBACKS ---------------------------------------------------------
+# CALLBACKS --------------------------------------------------------
 def odomCallBack(msg):
     global odom
     odom = msg
@@ -60,68 +43,147 @@ def scanCallBack(msg):
 
 # TIMER - Control Loop ----------------------------------------------
 def timerCallBack(event):
-    global lastError, sumError, estado, velAng
-    
-    setpoint = 0.5
-    scan_len = len(scan.ranges)
+    erro1=0
+    I1=0
+    I2=0
+    I3=0
+    erro2=0
+    erro3=0
+    state = 'state1'
     msg = Twist()
-   
-    if not(scan_len > 0):
-        msg.angular.z = 0
-        msg.linear.x = 0
+    '''
+    if state == 'initial':
+        setpoint1 = 2.683991025         #,1.887759912) talvez seta um pouco pra tras de jeito
         
+        position = odom.pose.pose.position
+        dist = setpoint1 - position.x #math.sqrt((setpoint[0] - position.x)**2 + (setpoint[1] - position.y) **2)
+        error1 = dist
+        
+        P1 = kp1*error1
+        I1 = ki1*error1 + I1 #ki1*error1
+        D1 = kd1*(error1 - erro1)
+        control1 = P1+I1+D1
+        erro1 = error1
+        
+        
+        
+        if control1>1:
+            control1 = 1
+        elif control1 < -1:
+            control1 = -1
+        print(state)
+        msg.linear.x = control1
+        state = 'state1'
+        
+    '''    
+    yaw = getAngle(odom)
+    scan_len = len(scan.ranges)
+	
+    print (scan_len)
+	
+    if not(scan_len > 0):
+        control2 = 0
+        msg.linear.x = 0
+			
+    elif state == 'state1':
+	
     # POSICIONA DIRECAO ---------------------------------   
-    elif estado == 'busca':
+		
         print('Buscando...')
        
         if min(scan.ranges[scan_len-5 : scan_len+5]) < 100:
-           
-            estado = 'avanca'
-            lastError = sumError = 0
             msg.angular.z = 0
-        else:
+            point = min (scan.ranges[scan_len-10 : scan_len+10]) 
+			#interpolando
+            setpoint2 = (200*((point - scan.ranges[0])/(scan.ranges[scan_len-1] - scan.ranges[0]))) - 100
+            error2 = (setpoint2 - yaw)
+    
+            if abs(error2) > 180:
+                if setpoint2 < 0:
+                    error2 += 360 
+                else:
+                    error2 -= 360
+            P2 = kp2*error2
+            I2 = ki2*error2 + I2 #ki1*error1
+            D2 = kd2*(error2 - erro2)
+            control2 = P2+I2+D2
+            erro2 = error2 
+				
+        else:	
             if min(scan.ranges[scan_len-15 : scan_len+15]) < 100:
-                msg.angular.z = velAng*0.5
+                msg.angular.z = 0.3*0.5
             else:
-                msg.angular.z = velAng
+                msg.angular.z = 0.3
+        '''
+		if scan_len > 0:
+        
+            if min(scan.ranges[scan_len-5 : scan_len+5]) < 100:
+                print ("SOCOROO")
+                
+                msg.angular.z = 0
+                point = min (scan.ranges[scan_len-10 : scan_len+10]) 
+                #interpolando
+                setpoint2 = (200*((point - scan.ranges[0])/(scan.ranges[scan_len-1] - scan.ranges[0]))) - 100
+                error2 = (setpoint2 - yaw)
+    
+                if abs(error2) > 180:
+                    if setpoint2 < 0:
+                        error2 += 360 
+                    else:
+                        error2 -= 360
+                P2 = kp2*error2
+                I2 = ki2*error2 + I2 #ki1*error1
+                D2 = kd2*(error2 - erro2)
+                control2 = P2+I2+D2
+                erro2 = error2 
             
+            else:
+                print ("AAAAAAAAAAAAAA")
+                if min(scan.ranges[scan_len-15 : scan_len+15]) < 100:
+                    msg.angular.z = 0.3*0.5
+                    
+                else:
+                    msg.angular.z = 3
+                    print ("virei nada")
+        '''    
+            
+                
+                    
+        
+        #else:
+            #control2 = 0
+            #print ("zero")
+        print ("fiz nd")
+        msg.angular.z = control2
+        
+        state = 'state2'
+                    
+    elif state == 'state2':
+        setpoint3 = 0.5
+    
+        scan_len = len(scan.ranges)
+        if scan_len > 0:
+            read = min(scan.ranges[scan_len-10 : scan_len+10])
 
-    elif estado == 'avanca':
+            error3 = -(setpoint3 - read)
+        
+            P3 = kp3*error3
+            I3 = ki3*error3 + I3 #ki1*error1
+            D3 = kd3*(error3 - erro3)
+            control3 = P3+I3+D3
+            erro3 = error3
+                
+            if control3 > 1:
+                control3 = 1
+            elif control3 < -1:
+                control3 = -1
+        else:
+            control3 = 0        
+        
+        print (state)
+        msg.linear.x = control3
+        
   
-    # AVANCA --------------------------------
-    
-        read = min(scan.ranges[scan_len-15 : scan_len+15])
-        P=I=D=0
-        if read < 100:
-            error = -(setpoint - read)
-            varError = (error-lastError)/timeMat
-            sumError+=error*timeMat
-            
-            lastError = error   
-            
-            P = kp*error
-            I = ki*sumError
-            D = kd*varError
-        
-        control = P+I+D
-        print(read, P, I, D)
-        
-        if control > 1:
-            control = 1
-        elif control < -1:
-            control = -1
-        
-          
-        msg.linear.x = control
-        msg.angular.z = 0
-
-
-        if read>100:
-            estado = 'busca'
-        
-    
-    
-    
     pub.publish(msg)
     
 
@@ -129,6 +191,6 @@ pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 odom_sub = rospy.Subscriber('/odom', Odometry, odomCallBack)
 scan_sub = rospy.Subscriber('/scan', LaserScan, scanCallBack)
 
-timer = rospy.Timer(rospy.Duration(timeMat), timerCallBack)
+timer = rospy.Timer(rospy.Duration(0.05), timerCallBack)
 
 rospy.spin()
